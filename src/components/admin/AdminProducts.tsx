@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Table, 
   TableBody, 
@@ -29,20 +28,59 @@ import {
 } from '@/components/ui/select';
 import { Edit, Trash2, Package, Plus } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import { products, categories, Product } from '@/data/products';
+import { categories } from '@/data/products';
+import { fetchProducts, updateProduct, deleteProduct } from '@/lib/supabase';
 
 const AdminProducts: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // In a real implementation, this would fetch from Supabase
+  const queryClient = useQueryClient();
+  
+  // Fetch products from Supabase
   const { data: productData, isLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: async () => {
-      // This would be a Supabase fetch call
-      return products;
+    queryFn: fetchProducts,
+  });
+  
+  // Mutations for updating and deleting products
+  const updateMutation = useMutation({
+    mutationFn: updateProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({
+        title: "Success",
+        description: `Product has been saved.`,
+      });
+      setIsDialogOpen(false);
+      setEditingProduct(null);
     },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to save product. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      toast({
+        title: "Success",
+        description: "Product has been deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete product. Please try again.",
+        variant: "destructive",
+      });
+    }
   });
   
   const filteredProducts = productData?.filter(product => 
@@ -50,14 +88,13 @@ const AdminProducts: React.FC = () => {
     product.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
-  const handleEditProduct = (product: Product) => {
+  const handleEditProduct = (product: any) => {
     setEditingProduct({...product});
     setIsDialogOpen(true);
   };
   
   const handleAddNewProduct = () => {
     setEditingProduct({
-      id: '',
       name: '',
       category: '',
       price: 0,
@@ -71,23 +108,13 @@ const AdminProducts: React.FC = () => {
   
   const handleSaveProduct = () => {
     if (!editingProduct) return;
-    
-    // In a real implementation, this would save to Supabase
-    toast({
-      title: "Success",
-      description: `Product "${editingProduct.name}" has been saved.`,
-    });
-    
-    setIsDialogOpen(false);
-    setEditingProduct(null);
+    updateMutation.mutate(editingProduct);
   };
   
-  const handleDeleteProduct = (product: Product) => {
-    // In a real implementation, this would delete from Supabase
-    toast({
-      title: "Success",
-      description: `Product "${product.name}" has been deleted.`,
-    });
+  const handleDeleteProduct = (product: any) => {
+    if (confirm('Are you sure you want to delete this product?')) {
+      deleteMutation.mutate(product.id);
+    }
   };
   
   return (

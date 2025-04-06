@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -21,6 +20,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Eye, Users } from 'lucide-react';
 import { Customer } from '@/types/admin';
+import { fetchCustomers } from '@/lib/supabase';
 
 // Mock data (replace with actual data from Supabase later)
 const mockCustomers: Customer[] = [
@@ -96,13 +96,10 @@ const AdminCustomers: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
-  // In a real implementation, this would fetch from Supabase
+  // Fetch customers from Supabase
   const { data: customers, isLoading } = useQuery({
     queryKey: ['customers'],
-    queryFn: async () => {
-      // This would be a Supabase fetch call
-      return mockCustomers;
-    },
+    queryFn: fetchCustomers,
   });
   
   const filteredCustomers = customers?.filter(customer => 

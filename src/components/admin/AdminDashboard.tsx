@@ -1,31 +1,48 @@
-
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, LineChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ArrowUpCircle, ShoppingBag, Users, TrendingUp, Package } from "lucide-react";
-
-// Mock data (replace with actual data from Supabase later)
-const mockSalesData = {
-  totalSales: 24680,
-  orderCount: 142,
-  averageOrderValue: 173.80,
-  topProducts: [
-    { productId: "spinach-fresh", productName: "Fresh Spinach", quantity: 89, revenue: 3115 },
-    { productId: "carrot-organic", productName: "Organic Carrots", quantity: 76, revenue: 3040 },
-    { productId: "broccoli", productName: "Broccoli Crown", quantity: 68, revenue: 4760 },
-    { productId: "methi-fresh", productName: "Fresh Methi", quantity: 54, revenue: 1080 },
-  ],
-  dailySales: [
-    { date: "Apr 1", sales: 1200, orders: 18 },
-    { date: "Apr 2", sales: 1800, orders: 24 },
-    { date: "Apr 3", sales: 1400, orders: 16 },
-    { date: "Apr 4", sales: 2200, orders: 28 },
-    { date: "Apr 5", sales: 1600, orders: 22 },
-    { date: "Apr 6", sales: 2400, orders: 34 },
-  ],
-};
+import { fetchSalesSummary, fetchDailySales, fetchTopProducts } from '@/lib/supabase';
 
 const AdminDashboard: React.FC = () => {
+  // Fetch dashboard data from Supabase
+  const { data: salesSummary, isLoading: isSummaryLoading } = useQuery({
+    queryKey: ['salesSummary'],
+    queryFn: fetchSalesSummary,
+  });
+  
+  const { data: dailySales, isLoading: isDailySalesLoading } = useQuery({
+    queryKey: ['dailySales'],
+    queryFn: fetchDailySales,
+  });
+  
+  const { data: topProducts, isLoading: isTopProductsLoading } = useQuery({
+    queryKey: ['topProducts'],
+    queryFn: fetchTopProducts,
+  });
+  
+  // Use mock data as fallback if Supabase data is not yet available
+  const mockSalesData = {
+    totalSales: salesSummary?.totalSales ?? 24680,
+    orderCount: salesSummary?.orderCount ?? 142,
+    averageOrderValue: salesSummary?.averageOrderValue ?? 173.80,
+    topProducts: topProducts ?? [
+      { productId: "spinach-fresh", productName: "Fresh Spinach", quantity: 89, revenue: 3115 },
+      { productId: "carrot-organic", productName: "Organic Carrots", quantity: 76, revenue: 3040 },
+      { productId: "broccoli", productName: "Broccoli Crown", quantity: 68, revenue: 4760 },
+      { productId: "methi-fresh", productName: "Fresh Methi", quantity: 54, revenue: 1080 },
+    ],
+    dailySales: dailySales ?? [
+      { date: "Apr 1", sales: 1200, orders: 18 },
+      { date: "Apr 2", sales: 1800, orders: 24 },
+      { date: "Apr 3", sales: 1400, orders: 16 },
+      { date: "Apr 4", sales: 2200, orders: 28 },
+      { date: "Apr 5", sales: 1600, orders: 22 },
+      { date: "Apr 6", sales: 2400, orders: 34 },
+    ],
+  };
+  
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

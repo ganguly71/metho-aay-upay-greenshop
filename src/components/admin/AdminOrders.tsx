@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Table, 
   TableBody, 
@@ -29,94 +28,7 @@ import {
 import { Eye, ShoppingBag } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Order, OrderStatus } from '@/types/admin';
-
-// Mock data (replace with actual data from Supabase later)
-const mockOrders: Order[] = [
-  {
-    id: "ORD-001",
-    customerId: "cust-001",
-    customerName: "Raj Sharma",
-    orderDate: "2024-04-01",
-    status: "delivered",
-    items: [
-      { id: "item1", productId: "spinach-fresh", productName: "Fresh Spinach", quantity: 2, unitPrice: 35, subtotal: 70 },
-      { id: "item2", productId: "carrot-organic", productName: "Organic Carrots", quantity: 1, unitPrice: 40, subtotal: 40 }
-    ],
-    subtotal: 110,
-    tax: 5.5,
-    shipping: 30,
-    total: 145.5,
-    paymentMethod: "Cash on Delivery",
-    shippingAddress: "42 Green Park, New Delhi, Delhi 110001"
-  },
-  {
-    id: "ORD-002",
-    customerId: "cust-002",
-    customerName: "Priya Patel",
-    orderDate: "2024-04-02",
-    status: "shipped",
-    items: [
-      { id: "item3", productId: "broccoli", productName: "Broccoli Crown", quantity: 1, unitPrice: 70, subtotal: 70 },
-      { id: "item4", productId: "bell-pepper-mix", productName: "Mixed Bell Peppers", quantity: 2, unitPrice: 80, subtotal: 160 }
-    ],
-    subtotal: 230,
-    tax: 11.5,
-    shipping: 30,
-    total: 271.5,
-    paymentMethod: "UPI",
-    shippingAddress: "78 Lake Gardens, Mumbai, Maharashtra 400001"
-  },
-  {
-    id: "ORD-003",
-    customerId: "cust-003",
-    customerName: "Vikram Singh",
-    orderDate: "2024-04-03",
-    status: "processing",
-    items: [
-      { id: "item5", productId: "cucumber-english", productName: "English Cucumber", quantity: 3, unitPrice: 30, subtotal: 90 },
-      { id: "item6", productId: "tomato-vine", productName: "Vine Tomatoes", quantity: 1, unitPrice: 50, subtotal: 50 }
-    ],
-    subtotal: 140,
-    tax: 7,
-    shipping: 30,
-    total: 177,
-    paymentMethod: "Credit Card",
-    shippingAddress: "15 Model Town, Chandigarh, Punjab 160001"
-  },
-  {
-    id: "ORD-004",
-    customerId: "cust-004",
-    customerName: "Ananya Desai",
-    orderDate: "2024-04-04",
-    status: "pending",
-    items: [
-      { id: "item7", productId: "methi-fresh", productName: "Fresh Methi", quantity: 2, unitPrice: 20, subtotal: 40 },
-      { id: "item8", productId: "onion-red", productName: "Red Onions", quantity: 1, unitPrice: 30, subtotal: 30 }
-    ],
-    subtotal: 70,
-    tax: 3.5,
-    shipping: 30,
-    total: 103.5,
-    paymentMethod: "UPI",
-    shippingAddress: "23 Whitefield, Bangalore, Karnataka 560001"
-  },
-  {
-    id: "ORD-005",
-    customerId: "cust-005",
-    customerName: "Arjun Kapoor",
-    orderDate: "2024-04-05",
-    status: "cancelled",
-    items: [
-      { id: "item9", productId: "cabbage-green", productName: "Green Cabbage", quantity: 1, unitPrice: 35, subtotal: 35 }
-    ],
-    subtotal: 35,
-    tax: 1.75,
-    shipping: 30,
-    total: 66.75,
-    paymentMethod: "Cash on Delivery",
-    shippingAddress: "56 Salt Lake, Kolkata, West Bengal 700001"
-  }
-];
+import { fetchOrders } from '@/lib/supabase';
 
 const AdminOrders: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -124,13 +36,10 @@ const AdminOrders: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   
-  // In a real implementation, this would fetch from Supabase
+  // Fetch orders from Supabase
   const { data: orders, isLoading } = useQuery({
     queryKey: ['orders'],
-    queryFn: async () => {
-      // This would be a Supabase fetch call
-      return mockOrders;
-    },
+    queryFn: fetchOrders,
   });
   
   const filteredOrders = orders?.filter(order => {
